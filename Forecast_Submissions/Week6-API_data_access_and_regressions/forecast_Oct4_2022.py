@@ -1,10 +1,12 @@
 #%%
+from statistics import linear_regression
 import urllib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+#%%
 def create_usgs_url(site_no, begin_date, end_date):
     return (
         f'https://waterdata.usgs.gov/nwis/dv?'
@@ -14,6 +16,7 @@ def create_usgs_url(site_no, begin_date, end_date):
         f'end_date={end_date}'
     )
 
+#%%
 def open_usgs_data(site, begin_date, end_date):
     url = create_usgs_url((site), begin_date, end_date)
     response = urllib.request.urlopen(url)
@@ -39,11 +42,13 @@ def open_usgs_data(site, begin_date, end_date):
 # Step 1: Open up 30 years of daily data for the Verde River stream gauge
 #         and put it into a pandas dataframe called `df`
 
-#TODO: Your code here
-site = None
-begin_date = None
-end_date = None
-df = None
+#TODO:your code here
+    
+site = '09506000'
+begin_date = '9-30-1992'
+end_date = '9-30-2022'
+df = open_usgs_data(site, begin_date, end_date)
+df.head()
 
 
 # %%
@@ -51,7 +56,10 @@ df = None
 #         dataframe called `weekly_df`
 
 #TODO: Your code here
-weekly_df = None
+weekly_df = df.resample('W').mean()
+weekly_df.head()
+
+
 
 
 # %%
@@ -61,8 +69,10 @@ weekly_df = None
 # Hint: Remember you can use `weekly_df.iloc` to index rows!
 
 #TODO: Your code here
-x = None
-y = None
+x = weekly_df.iloc[0:-1]
+y = weekly_df.iloc[1:]
+
+
 
 
 # %%
@@ -80,7 +90,8 @@ plt.ylabel("Next week streamflow [cfs]")
 #         And use the `fit` function to map x -> y
 
 #TODO: Your code here
-full_regression = None
+full_regression = LinearRegression()
+full_regression.fit(x, y)
 # ...
 
 # `np.around` rounds numbers to given number of digits
@@ -101,7 +112,7 @@ print(f'The r^2 value is {r2}')
 x_sample = np.arange(0, 15000, 1000).reshape(-1, 1)
 
 #TODO: Your code here
-y_predicted = None
+y_predicted = full_regression.predict(x_sample)
 
 plt.scatter(x, y )
 plt.plot(x_sample, y_predicted, color='black', label='Regression line')
@@ -115,7 +126,10 @@ plt.legend()
 # Note this is similar to the `dayofyear` variable we've seen in class
 
 #TODO: Your code here
-weekofyear = None
+weekofyear = weekly_df.index.isocalendar().week
+woy = 38
+woy_filter = weekly_df.index.isocalendar().week == woy
+df_woy = weekly_df[woy_filter]
 
 
 # %%
@@ -124,9 +138,19 @@ weekofyear = None
 # Note: This week's week of year is 38
 
 #TODO: Your code here
-this_week = None
-next_week = None
-following_week = None
+weekofyear = weekly_df.index.isocalendar().week
+woy1 = 39
+woy_filter = weekly_df.index.isocalendar().week == woy1
+df_woy1 = weekly_df[woy_filter]
+
+weekofyear = weekly_df.index.isocalendar().week
+woy2 = 40
+woy_filter = weekly_df.index.isocalendar().week == woy2
+df_woy2 = weekly_df[woy_filter]
+
+this_week = df_woy
+next_week = df_woy1
+following_week = df_woy2
 
 
 # %%
@@ -145,9 +169,11 @@ plt.ylabel('Future streamflow [cfs]')
 #          one that maps `this_week` to `following_week`
 
 #TODO: Your code here
-one_week_regression = None
+one_week_regression = LinearRegression()
+one_week_regression.fit(this_week, next_week)
 # ...
-two_week_regression = None
+two_week_regression = LinearRegression()
+two_week_regression.fit(this_week, following_week)
 # ...
 
 #%%
@@ -158,13 +184,13 @@ two_week_regression = None
 regression_input = weekly_df.iloc[[-1]]
 
 #TODO: Your code here
-one_week_prediction = None
-two_week_prediction = None
+one_week_prediction = one_week_regression.predict(regression_input)
+two_week_prediction = two_week_regression.predict(regression_input)
 
 print(f'One week prediction: {one_week_prediction.flatten()[0]}')
 print(f'Two week prediction: {two_week_prediction.flatten()[0]}')
 
-# %%
+ # %%
 # Step 13: Copy these values into your streamflow forecast csv here:
 # https://github.com/HAS-Tools-Fall2022/forecasting22/tree/main/forecast_entries
 
