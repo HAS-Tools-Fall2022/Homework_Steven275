@@ -1,11 +1,13 @@
 #%%
 # This script contains exercises on 
 # manipulating Series and DataFrames with pandas
+from itertools import groupby
 import urllib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
+
 
 
 #%% 
@@ -66,40 +68,50 @@ verde_df.head()
 
 # %%
 # 1. How do you see a quick summary of what is in `verde_df`?
-
+verde_df.head()
 # %%
 # 2. How do you get a listing of the columns in `verde_df`?
-
+verde_df.columns
 # %%
 # 3. How do you select the streamflow column in `verde_df`?
+verde_df['streamflow']
 
 #%%
 # 4. How do you plot the streamflow in `verde_df`?
+verde_df['streamflow'].plot()
 
 #%%
 # 5. How do you get the last streamflow value from `verde_df`?
+verde_df['streamflow'].iloc[-1]
 
 #%%
 # 6. What is the mean streamflow value for the 30 year period?
-
+verde_df['streamflow'].mean()
 #%%
 # 7. What is the maximum value for the 30 year period?
-
+verde_df['streamflow'].max()
 #%% 
 # 8. How do you find the maximum streamflow value for each year?
-
+verde_df['streamflow'].groupby(verde_df['year']).max()
 #%%
 # 9. How do you make a scatter plot of 
 #    `dayl (s)` versus `tmax (deg c)`?
 # INFO: `dayl` is the day length in seconds and
 #       `tmax` is the daily maximum temperature
+x=verde_df['tmax (deg c)']
+y=verde_df['dayl (s)']
+plt.scatter(x, y)
+plt.xlabel('tmax (deg c)')
+plt.ylabel('dayl (s)')
 
 #%%
 # 10. How do you calculate (and plot) the mean
 #     daily minimum temperature for each day of year? 
 #     And plot it?
 # INFO: Daily minimum temperature is in the column `tmin (deg c)`
-
+x=verde_df['yday']
+y=verde_df['tmin (deg c)'].groupby(verde_df['dayl (s)']).mean
+plt.scatter(x,y)
 #%%
 # 11. What is the average value of all columns for October 10 
 #     across all years?
@@ -126,7 +138,7 @@ iris_df.head()
 
 # %%
 # 12. How do you view the "unique" species in the `iris_df` index?
-
+iris_df.index.unique()
 # %%
 # 13. How do you "locate" only rows for the `versicolor` species?
 
