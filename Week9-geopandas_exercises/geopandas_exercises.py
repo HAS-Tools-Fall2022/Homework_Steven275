@@ -7,34 +7,28 @@ import pandas as pd
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
+
 #%%
 # NOTE: Here we are just  pulling in data from GitHub directly
 # This can be done by specifying the url to the shapefile, but
 # prepending it with `/vsicurl`
-az = gpd.read_file(
-    '/vsicurl/https://github.com/HAS-Tools-Fall2022'
-    '/Course-Materials22/raw/main/data/arizona_shapefile'
+az = gpd.read_file('./arizona_shapefile'
     '/tl_2016_04_cousub.shp'
-)
-
-gages = gpd.read_file(
-    '/vsicurl/https://github.com/HAS-Tools-Fall2022'
-    '/Course-Materials22/raw/main/data/gagesii_shapefile/'
+) 
+#%%
+gages = gpd.read_file('./gagesii_shapefile/'
     'gagesII_9322_sept30_2011.shp'
 )
 
-huc8 = gpd.read_file(
-    '/vsicurl/https://github.com/HAS-Tools-Fall2022'
-    '/Course-Materials22/raw/main/data/arizona_huc8_shapefile/'
+huc8 = gpd.read_file('./arizona_huc8_shapefile/'
     'WBDHU8.shp'
 )
-
 #%%
 # Step 1: Put the `gages` geodataframe onto the same 
 # CRS as the `az` geodataframe
 
 # TODO: Your code here
-gages = None
+gages =  gages.to_crs(az.crs)
 
 #%%
 # Step 2: The various polygons in the Arizona shapefile
@@ -47,7 +41,8 @@ gages = None
 # geodataframe with only a single geometry.
 
 # TODO: Your code here
-az = None
+az=az.dissolve()
+az.plot()
 
 
 #%%
@@ -56,7 +51,7 @@ az = None
 # In GIS-language this is called "clipping" 
 
 # TODO: Your code here
-az_gages = None
+az_gages = gages.clip(az)
 
 # %%
 # Step 4: Make a plot showing Arizona in "lightgrey"
@@ -69,9 +64,12 @@ az_gages = None
 # NOTE: You might try setting `markersize=3` or similar
 #       when you are plotting the gages, so that it's 
 #       easier to see them.
+#%%
 
 # TODO: Your code here
-ax = None
+ax =az.plot(color='lightgrey', edgecolor='white')
+az_gages.plot(ax=ax, color='crimson', markersize=3) 
+plt.title('gauges 2 az')
 
 # %%
 # Step 5: I also gave you a dataset of watershed
@@ -91,7 +89,12 @@ ax = None
 #       inside of your second plot command.
 
 # TODO: Your code here
-ax = None
+huc8=huc8.to_crs(az.crs)
+ax = huc8.plot(color='lightgrey')
+az.plot(ax=ax, color='none', edgecolor='black')
+az_gages.plot(ax=ax, color='crimson' , markersize=3)
+plt.title('watershed boundaries and gages for az')
+
 
 #%%
 # Step 6:  For this step, Iwant you to plot the location
@@ -107,9 +110,10 @@ ax = None
 # still appear as dots.
 name = "VERDE RIVER NEAR CAMP VERDE, AZ"
 # TODO: Your code here
-is_the_gage = None
-verde_gage = None
-
+is_the_gage = az_gages[(az_gages['STANAME']== name)]
+verde_gage = is_the_gage
+print(is_the_gage)
+#%%
 # Plotting code, you should not have to modify
 ax = huc8.plot(color='lightgrey')
 az.plot(ax=ax, edgecolor='black', color="none")
@@ -166,22 +170,34 @@ begin_date = '2012-10-01'
 end_date = '2022-09-30'
 
 # TODO: Your code here
-station_id = None
+station_id = az_gages['STAID']
 
 site = station_id.values[0]
 verde_df = open_usgs_data(site, begin_date, end_date)
 verde_df.head()
 
 
-#%% 
+ #%% 
 # Step 9: Now try pulling out a different gage location
 # using it's name and download the USGS data for the 
-# same time period as the `verde_df`. Put this one in
+# same time period as the `verde_df`. Put this one in       
 # `other_gage_df`. Compare the two location's mean
 # streamflows by printing them out.
 
 # TODO: Your code here
-station_name = None
+station_name = 'SANTA CRUZ RIVER NEAR LOCHIEL, AZ.'
+is_the_gage = az_gages['STANAME']== station_name
+lochiel_gage = az_gages.loc[is_the_gage]
+
+lochiel_id=lochiel_gage['STAID']
+site=lochiel_id.values[0]
+other_gage_df = open_usgs_data(site, begin_date, end_date)
+print(verde_df['streamflow'].mean(), other_gage_df['streamflow'].mean())
+
+
+
+
+
 
 #%%
 # Step 10: From our original plots of the spatial
@@ -208,10 +224,11 @@ number_gages_in_huc = []
 for i, huc in huc8.iterrows():
     print(i, huc['name'])
     # TODO: Your code here
-    clipped_gages = None
+    clipped_gages = az_gages.clip(huc.geometry)
+    number_gages_in_huc.append(len(clipped_gages))
 
 # TODO: Your code here
-
+huc8['number_gages']=number_gages_in_huc
 # %%
 # Step 11: Finally, plot the number of gages in
 # each HUC - and don't forget to set `add_legend=True`!
@@ -219,6 +236,8 @@ for i, huc in huc8.iterrows():
 # outline on top
 
 # TODO: Your code here
-
+ax=huc8.plot(column='number_gages', cmap='Blues', legend=True)
+az.plot(ax=ax, facecolor='none', edgecolor='black')
+#I'm not sure how we title the plot.
 # %%
 # CONGRATULATIONS, you're finished!
