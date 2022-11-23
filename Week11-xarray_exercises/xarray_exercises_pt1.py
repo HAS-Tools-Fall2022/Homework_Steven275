@@ -39,9 +39,18 @@ def download_gridmet_variable(variable, year):
 downloaded_files = []
 
 #TODO: Your code here
-year = None
-variables_to_download = None
+year = '2020'
+variables_to_download = ['pet', 'srad', 'vpd']
+for i in range(0, len(variables_to_download)):
+    print(i)
+    var=variables_to_download
+    x=download_gridmet_variable(
+    variables_to_download[i], year
+    )
+    downloaded_files.append(x)
+print(downloaded_files)
 
+#%%
 print('Done downloading data!')
 print(downloaded_files)
 
@@ -57,7 +66,7 @@ print(downloaded_files)
 # what's in the data.
 
 # TODO: Your code here
-ds = None
+ds = xr.open_mfdataset(downloaded_files)
 ds
 
 #%%
@@ -69,7 +78,7 @@ ds
 # dataset.
 
 #TODO: Your code here
-ds = None
+ds = ds.drop('crs')
 ds
 
 #%%
@@ -81,8 +90,8 @@ ds
 # of the dataset is and print that out.
 
 # TODO: Your code here
-attrs = None
-print(None)
+attrs = ds.attrs
+print(attrs['author'])
 
 #%%
 # Step 4:
@@ -94,10 +103,11 @@ print(None)
 # and "units" in the variables attributes. 
 # Print them out below.
 
-#TODO: Your code here
+#TODO: 
+
 for var in ds:
-    description = None
-    units = None
+    description = ds[var].attrs['description']
+    units = ds[var].attrs['units']
     print(description, units)
 
 
@@ -107,7 +117,8 @@ for var in ds:
 # and assign it to the `first_ds` variable
 
 # TODO: Your code here
-first_ds = None
+first_ds = ds.isel(day=1)
+print(first_ds)
 
 # %%
 # Step 6:
@@ -116,14 +127,14 @@ first_ds = None
 # "mean_vapor_pressure_deficit".
 
 #TODO: Your code here
-
+first_ds_Pressure=ds['mean_vapor_pressure_deficit'].isel(day=1).plot()
 # %%
 # Step 7:
 # Similarly, make a spatial plot of the variable
 # "potential_evapotranspiration".
 
-#TODO: Your code here
-
+#TODO: 
+evapotranspiration=ds['potential_evapotranspiration'].isel(day=1).plot()
 # %%
 # Step 8:
 # Select the first 30 entries of latitude 
@@ -131,10 +142,13 @@ first_ds = None
 # from the full `ds`
 
 #TODO: Your code here
-subset_ds = None
+subset_ds = ds.isel(
+    lat=slice(0,30), 
+    lon=slice(20, 40)
+    )
 subset_ds
 
-#%%
+  #%%
 # Step 9:
 # With this new dataset pared down, 
 # take a spatial average. That is
@@ -142,7 +156,7 @@ subset_ds
 # and "lon" dimensions.
 
 # TODO: Your code here
-spatial_mean_ds = None
+spatial_mean_ds = subset_ds.mean(['lat', 'lon'])
 spatial_mean_ds
 
 # %%
@@ -154,6 +168,12 @@ spatial_mean_ds
 fig, axes = plt.subplots(2, 1, figsize=(12, 8))
 
 # TODO: Your code here
+# x_axis=ds['potential_evapotranspiration']
+# y_axis=ds['mean_vapor_pressure_deficit']
+# ds.plot.scatter(x_axis, y_axis)
+spatial_mean_ds['potential_evapotranspiration'].plot(ax=axes[0])
+spatial_mean_ds['mean_vapor_pressure_deficit'].plot(ax=axes[1])
+
 
 # %%
 # Step 11:
@@ -162,8 +182,12 @@ fig, axes = plt.subplots(2, 1, figsize=(12, 8))
 # function. Note this works very similarly to the pandas
 # version so use that background to get started.
 
-# TODO: Your code here
-
+# TODO: 
+x=spatial_mean_ds['potential_evapotranspiration']
+y=spatial_mean_ds['mean_vapor_pressure_deficit']
+plt.scatter(x, y)
+plt.xlabel('potential_evapotranspiration (mm)')
+plt.ylabel('mean_vapor_pressure_deficit (kpa)')
 
 # %%
 # Step 12:
@@ -174,8 +198,8 @@ fig, axes = plt.subplots(2, 1, figsize=(12, 8))
 
 # TODO: Your code here
 np.corrcoef(
-    None,
-    None
+    spatial_mean_ds['potential_evapotranspiration'],
+    spatial_mean_ds['mean_vapor_pressure_deficit']
 )
 
 
@@ -197,7 +221,7 @@ np.corrcoef(
 # extra grid cells.
 
 #TODO: Your code here
-coarse_amount = None
+coarse_amount = {'lat':4, 'lon':4}
 
 coarse_ds = ds.coarsen(
     coarse_amount, 
@@ -212,7 +236,7 @@ coarse_ds
 # over the "day", "dimension". 
 
 # TODO: Your code here
-correlation = None
+correlation = xr.corr(coarse_ds['potential_evapotranspiration'], coarse_ds['mean_vapor_pressure_deficit'], 'day')
 correlation
 
 # %%
@@ -228,10 +252,13 @@ correlation
 # https://xarray.pydata.org/en/v2022.11.0/user-guide/dask.html
 #
 # Anyhow, this should compute relatively quickly. Where
-# do these variables tend to be decoupled?
+# do these variables tend to be decoupled? 
+# these variables tend to be decoupled along the southwest coast, Texas coast
+# Florida coast, and  east coast. The correlation is lower near the coasts because 
+# these areas are near the ocean where there is evaporation happening all the time.
 
 # TODO: Your code here
-
+correlation.plot()
 
 # %%
 # Congratulations that's it for this assignment!
